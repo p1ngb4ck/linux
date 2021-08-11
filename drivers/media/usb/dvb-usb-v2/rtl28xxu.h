@@ -30,6 +30,7 @@
 #include "tua9001.h"
 #include "r820t.h"
 #include "si2168.h"
+#include "si2168.h"
 #include "si2157.h"
 
 /*
