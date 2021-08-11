@@ -1073,7 +1073,7 @@ static int rtl2832u_frontend_attach(struct dvb_usb_adapter *adap)
                 } else {
 			/* Unknown demodulator */
 			dev->slave_demod = SLAVE_DEMOD_NONE;
-                        goto err_slave_demod_failed
+                        goto err_slave_demod_failed;
 		}
 	}
 	return 0;
