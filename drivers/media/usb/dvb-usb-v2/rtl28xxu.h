@@ -29,7 +29,7 @@
 #include "fc2580.h"
 #include "tua9001.h"
 #include "r820t.h"
-#include "si2168.h"
+#include "si2165.h"
 #include "si2168.h"
 #include "si2157.h"
 
