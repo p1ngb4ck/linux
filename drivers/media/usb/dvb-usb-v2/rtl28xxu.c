@@ -594,6 +594,12 @@ tuner_found:
 			dev->slave_demod = SLAVE_DEMOD_SI2168;
 			goto demod_found;
 		}
+		/* terrible little hack */
+		else {
+			dev_dbg(&d->intf->dev, "Si2165 found\n");
+			dev->slave_demod = SLAVE_DEMOD_SI2165;
+			goto demod_found;
+		}
 	}
 
 demod_found:
@@ -1010,32 +1016,64 @@ static int rtl2832u_frontend_attach(struct dvb_usb_adapter *adap)
 				goto err_slave_demod_failed;
 			adap->fe[1]->id = 1;
 			dev->i2c_client_slave_demod = NULL;
-		} else {
-			struct si2168_config si2168_config = {};
-			struct i2c_adapter *adapter;
+		} else if (dev->slave_demod == SLAVE_DEMOD_SI2168) {
+                        struct si2168_config si2168_config = {};
+                        struct i2c_adapter *adapter;
 
-			si2168_config.i2c_adapter = &adapter;
-			si2168_config.fe = &adap->fe[1];
-			si2168_config.ts_mode = SI2168_TS_SERIAL;
-			si2168_config.ts_clock_inv = false;
-			si2168_config.ts_clock_gapped = true;
-			strscpy(info.type, "si2168", I2C_NAME_SIZE);
-			info.addr = 0x64;
-			info.platform_data = &si2168_config;
-			request_module(info.type);
-			client = i2c_new_client_device(&d->i2c_adap, &info);
-			if (!i2c_client_has_driver(client))
-				goto err_slave_demod_failed;
+                        si2168_config.i2c_adapter = &adapter;
+                        si2168_config.fe = &adap->fe[1];
+                        si2168_config.ts_mode = SI2168_TS_SERIAL;
+                        si2168_config.ts_clock_inv = false;
+                        si2168_config.ts_clock_gapped = true;
+                        strscpy(info.type, "si2168", I2C_NAME_SIZE);
+                        info.addr = 0x64;
+                        info.platform_data = &si2168_config;
+                        request_module(info.type);
+                        client = i2c_new_client_device(&d->i2c_adap, &info);
+                        if (!i2c_client_has_driver(client)) {
+                                dev->slave_demod = SLAVE_DEMOD_NONE;
+                                goto err_slave_demod_failed;
+                        }
 
-			if (!try_module_get(client->dev.driver->owner)) {
-				i2c_unregister_device(client);
-				goto err_slave_demod_failed;
-			}
+                        if (!try_module_get(client->dev.driver->owner)) {
+                                i2c_unregister_device(client);
+                                dev->slave_demod = SLAVE_DEMOD_NONE;
+                                goto err_slave_demod_failed;
+                        }
 
-			dev->i2c_client_slave_demod = client;
+                        dev->i2c_client_slave_demod = client;
 
-			/* for Si2168 devices use only new I2C write method */
-			dev->new_i2c_write = true;
+                        /* for Si2168 devices use only new I2C write method */
+                        dev->new_i2c_write = true;
+                } else if (dev->slave_demod == SLAVE_DEMOD_SI2165) {
+                        struct si2165_platform_data si2165_platform_data = {};
+
+                        si2165_platform_data.fe = &adap->fe[1];
+                        si2165_platform_data.chip_mode = SI2165_MODE_PLL_XTAL;
+                        si2165_platform_data.ref_freq_hz = 24000000;
+                        si2165_platform_data.inversion = false;
+                        strscpy(info.type, "si2165", I2C_NAME_SIZE);
+                        info.addr = 0x64;
+                        info.platform_data = &si2165_platform_data;
+                        request_module(info.type);
+                        client = i2c_new_client_device(&d->i2c_adap, &info);
+                        if (!i2c_client_has_driver(client)) {
+                                dev->slave_demod = SLAVE_DEMOD_NONE;
+                                goto err_slave_demod_failed;
+                        }
+
+                        if (!try_module_get(client->dev.driver->owner)) {
+                                i2c_unregister_device(client);
+                                dev->slave_demod = SLAVE_DEMOD_NONE;
+                                goto err_slave_demod_failed;
+                        }
+
+                        dev->i2c_client_slave_demod = client;
+                        dev->new_i2c_write = true;
+                } else {
+			/* Unknown demodulator */
+			dev->slave_demod = SLAVE_DEMOD_NONE;
+                        goto err_slave_demod_failed
 		}
 	}
 	return 0;
@@ -1969,6 +2007,8 @@ static const struct usb_device_id rtl28xxu_id_table[] = {
 		RC_MAP_ASTROMETA_T2HYBRID) },
 	{ DVB_USB_DEVICE(0x5654, 0xca42,
 		&rtl28xxu_props, "GoTView MasterHD 3", NULL) },
+	{ DVB_USB_DEVICE(0x1b80, 0xd3b1,
+		&rtl28xxu_props, "Delock 61959 v2", NULL) },
 	{ }
 };
 MODULE_DEVICE_TABLE(usb, rtl28xxu_id_table);
