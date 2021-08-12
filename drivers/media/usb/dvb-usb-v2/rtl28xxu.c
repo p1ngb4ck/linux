@@ -947,10 +947,9 @@ static int rtl2832u_frontend_attach(struct dvb_usb_adapter *adap)
 		ret = -ENODEV;
 		goto err;
 	}
-
+	
 	adap->fe[0] = pdata->get_dvb_frontend(client);
 	dev->demod_i2c_adapter = pdata->get_i2c_adapter(client);
-
 	dev->i2c_client_demod = client;
 
 	/* set fe callback */
