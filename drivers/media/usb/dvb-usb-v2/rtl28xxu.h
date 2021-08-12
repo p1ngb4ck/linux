@@ -77,6 +77,8 @@ struct rtl28xxu_dev {
 	#define SLAVE_DEMOD_MN88473        2
 	#define SLAVE_DEMOD_SI2168         3
 	#define SLAVE_DEMOD_CXD2837ER      4
+	#define SLAVE_DEMOD_SI2165         5
+	
 	unsigned int slave_demod:3;
 	union {
 		struct rtl2830_platform_data rtl2830_platform_data;
