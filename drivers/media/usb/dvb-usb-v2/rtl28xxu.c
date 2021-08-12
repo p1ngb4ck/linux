@@ -382,6 +382,7 @@ static int rtl2832u_read_config(struct dvb_usb_device *d)
 	struct rtl28xxu_req req_mn88473 = {0xff38, CMD_I2C_RD, 1, buf};
 	struct rtl28xxu_req req_cxd2837er = {0xfdd8, CMD_I2C_RD, 1, buf};
 	struct rtl28xxu_req req_si2157 = {0x00c0, CMD_I2C_RD, 1, buf};
+	struct rtl28xxu_req req_si2165 = {0x0023, CMD_I2C_RD, 1, buf};
 	struct rtl28xxu_req req_si2168 = {0x00c8, CMD_I2C_RD, 1, buf};
 
 	dev_dbg(&d->intf->dev, "\n");
@@ -594,8 +595,9 @@ tuner_found:
 			dev->slave_demod = SLAVE_DEMOD_SI2168;
 			goto demod_found;
 		}
-		/* terrible little hack */
-		else {
+
+		ret = rtl28xxu_ctrl_msg(d, &req_si2165);
+		if(ret == 0 && buf[0] == 0x07) {
 			dev_dbg(&d->intf->dev, "Si2165 found\n");
 			dev->slave_demod = SLAVE_DEMOD_SI2165;
 			goto demod_found;
