@@ -1055,19 +1055,20 @@ static int rtl2832u_frontend_attach(struct dvb_usb_adapter *adap)
                         info.addr = 0x64;
                         info.platform_data = &si2165_platform_data;
                         request_module(info.type);
-                        client = i2c_new_client_device(&d->i2c_adap, &info);
-                        if (!i2c_client_has_driver(client)) {
+                        adap->fe[1] = i2c_new_client_device(&d->i2c_adap, &info);
+                        if (!i2c_client_has_driver(adap->fe[1])) {
                                 dev->slave_demod = SLAVE_DEMOD_NONE;
                                 goto err_slave_demod_failed;
                         }
 
-                        if (!try_module_get(client->dev.driver->owner)) {
+                        if (!try_module_get(adap->fe[1]->dev.driver->owner)) {
                                 i2c_unregister_device(client);
                                 dev->slave_demod = SLAVE_DEMOD_NONE;
                                 goto err_slave_demod_failed;
                         }
-
-                        dev->i2c_client_slave_demod = client;
+			adap->fe[1]->id = 1;
+			dev->i2c_client_slave_demod = NULL;
+                        /* dev->i2c_client_slave_demod = client; */
                         dev->new_i2c_write = true;
                 } else {
 			/* Unknown demodulator */
