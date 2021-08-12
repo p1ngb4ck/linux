@@ -1065,9 +1065,7 @@ static int rtl2832u_frontend_attach(struct dvb_usb_adapter *adap)
                                 dev->slave_demod = SLAVE_DEMOD_NONE;
                                 goto err_slave_demod_failed;
                         }
-			adap->fe[1]->id = 1;
-			dev->i2c_client_slave_demod = NULL;
-                        /* dev->i2c_client_slave_demod = client; */
+                        dev->i2c_client_slave_demod = client;
                         dev->new_i2c_write = true;
                 } else {
 			/* Unknown demodulator */
